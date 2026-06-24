@@ -1,0 +1,14 @@
+{
+  "name": "planning-poker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Покер планирования — командная оценка задач в реальном времени",
+  "scripts": {
+    "install:deps": "npm install --prefix server && npm install --prefix client",
+    "build:client": "npm run build --prefix client",
+    "build": "npm run install:deps && npm run build:client",
+    "start": "node server/index.js",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  }
+}
