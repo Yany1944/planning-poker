@@ -12,7 +12,7 @@ export default function TaskDetailModal({ task, index, total, isCurrent, isModer
 
   const votes = task.votes || []
   const nums = votes.map((v) => Number(v.vote)).filter((n) => !isNaN(n))
-  const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : '-'
+  const avg = nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : '-'
   const min = nums.length ? Math.min(...nums) : '-'
   const max = nums.length ? Math.max(...nums) : '-'
   const isDone = task.finalScore !== null

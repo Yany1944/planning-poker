@@ -21,7 +21,7 @@ const DATA_FILE = path.join(DATA_DIR, 'sessions.json');
 const ARCHIVE_DIR = path.join(DATA_DIR, 'archive');
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000; // 30 дней
 
-const VALID_CARDS = new Set(['1', '2', '3', '5', '8', '13', '20', '?', 'пас']);
+const VALID_CARDS = new Set(['1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', 'пас']);
 
 let sessions = loadSessions();
 const socketToSession = {};

@@ -8,7 +8,7 @@ export default function VoteResults({ participants }) {
   const nums = votes.filter((v) => v && !isNaN(Number(v))).map(Number)
   const hasQuestion = votes.includes('?')
 
-  const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : '-'
+  const avg = nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : '-'
   const min = nums.length ? Math.min(...nums) : '-'
   const max = nums.length ? Math.max(...nums) : '-'
   const spread = nums.length ? Math.max(...nums) - Math.min(...nums) : 0

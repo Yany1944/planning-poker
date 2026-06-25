@@ -53,6 +53,14 @@ export default function ResultsModal({ session, isModerator, onEnd, onExit, onRe
 
       <div className="border border-hairline rounded-lg overflow-hidden mb-5">
         <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-muted border-b border-hairline">
+              <th className="px-3 py-2.5 font-medium w-8">№</th>
+              <th className="px-3 py-2.5 font-medium">Задача</th>
+              <th className="px-3 py-2.5 font-medium text-right w-14">Оценка</th>
+              {!isFinished && isModerator && <th className="w-8" />}
+            </tr>
+          </thead>
           <tbody>
             {tasks.map((t, i) => (
               <tr key={t.id} className="border-b border-hairline-soft last:border-0">

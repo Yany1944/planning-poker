@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Crown, Copy, Check, Flag, Eye, RotateCcw, ClipboardList, UserPlus, UserMinus, Timer, AlarmClock } from 'lucide-react'
 import socket from '../socket'
 import { forgetSession } from '../lib/storage'
+import { FIB, snapToFib } from '../lib/cards'
 import Toasts from '../components/Toasts'
 import CardDeck from '../components/CardDeck'
 import TaskSidebar from '../components/TaskSidebar'
@@ -131,18 +132,17 @@ export default function SessionPage() {
   const isOver = phase === 'results' || phase === 'finished'
   const tableRevealed = phase === 'revealed' || isOver
 
-  function suggestScore() {
+  function avgVote() {
     const nums = Object.values(session.participants)
       .map((p) => p.vote)
       .filter((v) => v && !isNaN(Number(v)))
       .map(Number)
-    if (nums.length === 0) return ''
-    const tally = {}
-    let best = 0
-    nums.forEach((n) => { tally[n] = (tally[n] || 0) + 1; if (tally[n] > best) best = tally[n] })
-    const modes = Object.keys(tally).filter((k) => tally[k] === best).map(Number)
-    if (modes.length === 1) return String(modes[0])
-    return String(Math.round(nums.reduce((a, b) => a + b, 0) / nums.length))
+    if (nums.length === 0) return null
+    return nums.reduce((a, b) => a + b, 0) / nums.length
+  }
+  function suggestScore() {
+    const avg = avgVote()
+    return avg === null ? '' : String(snapToFib(avg))
   }
 
   function copyId() {
@@ -156,8 +156,10 @@ export default function SessionPage() {
     setSelectedCard(value)
     socket.emit('vote', { sessionId, value })
   }
-  function handleFinalize() {
-    socket.emit('finalize_score', { sessionId, score: finalScore.trim() || suggestScore() })
+  function handleFinalize(score) {
+    const final = String(score || finalScore || suggestScore()).trim()
+    if (!final) return
+    socket.emit('finalize_score', { sessionId, score: final })
     setFinalScore('')
     setSelectedCard(null)
   }
@@ -323,35 +325,56 @@ export default function SessionPage() {
               </div>
             )}
 
-            {phase === 'revealed' && isModerator && (
-              <div className="mt-8 flex flex-col items-center gap-3">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={finalScore}
-                    onChange={(e) => setFinalScore(e.target.value)}
-                    placeholder={`Итог: ${suggestScore() || '-'}`}
-                    className="w-32 text-center bg-canvas border border-hairline rounded-md px-3 h-10
-                               text-ink placeholder-muted-soft outline-none focus:border-ink transition-colors"
-                  />
-                  <button
-                    onClick={handleFinalize}
-                    className="px-6 h-10 bg-primary hover:bg-primary-active text-white font-semibold rounded-md transition-colors"
-                  >
-                    {session.tasks.some((t, i) => t.finalScore === null && i !== session.currentTaskIndex)
-                      ? 'Принять → Далее'
-                      : 'Принять → Результаты'}
-                  </button>
+            {phase === 'revealed' && isModerator && (() => {
+              const suggested = suggestScore()
+              const selectedFinal = finalScore || suggested
+              const hasMore = session.tasks.some((t, i) => t.finalScore === null && i !== session.currentTaskIndex)
+              return (
+                <div className="mt-8 flex flex-col items-center gap-4">
+                  <p className="text-sm text-muted">
+                    Выберите итоговую оценку
+                    {suggested && <> · рекомендуем <strong className="text-ink">{suggested}</strong></>}
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {FIB.map((f) => {
+                      const val = String(f)
+                      const active = selectedFinal === val
+                      return (
+                        <button
+                          key={f}
+                          onClick={() => setFinalScore(val)}
+                          className={`w-12 h-16 rounded-md border font-semibold flex items-center justify-center
+                                      transition-all tabular-nums ${
+                                        active
+                                          ? '-translate-y-1 bg-primary border-primary text-white shadow-card'
+                                          : 'bg-canvas border-hairline text-ink hover:border-ink hover:-translate-y-0.5'
+                                      }`}
+                        >
+                          {f}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleFinalize(selectedFinal)}
+                      disabled={!selectedFinal}
+                      className="px-6 h-10 bg-primary hover:bg-primary-active disabled:opacity-50
+                                 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors"
+                    >
+                      {hasMore ? 'Принять → Далее' : 'Принять → Результаты'}
+                    </button>
+                    <button
+                      onClick={() => socket.emit('revote', { sessionId })}
+                      className="inline-flex items-center gap-1.5 px-6 h-10 border border-hairline bg-canvas
+                                 hover:bg-surface-card text-body rounded-md transition-colors text-sm"
+                    >
+                      <RotateCcw size={15} /> Переголосовать
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => socket.emit('revote', { sessionId })}
-                  className="inline-flex items-center gap-1.5 px-6 h-10 border border-hairline bg-canvas
-                             hover:bg-surface-card text-body rounded-md transition-colors text-sm"
-                >
-                  <RotateCcw size={15} /> Переголосовать
-                </button>
-              </div>
-            )}
+              )
+            })()}
 
             {phase === 'revealed' && !isModerator && (
               <p className="text-center text-muted-soft text-sm mt-8">Ожидайте решения модератора…</p>

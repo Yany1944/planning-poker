@@ -1,4 +1,4 @@
-const CARDS = ['1', '2', '3', '5', '8', '13', '20', '?', 'пас']
+import { CARDS } from '../lib/cards'
 
 export default function CardDeck({ selected, onSelect }) {
   return (

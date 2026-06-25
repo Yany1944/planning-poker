@@ -119,7 +119,7 @@ export default function HomePage() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2">
-              {['1', '2', '3', '5', '8', '13', '20', '?', 'пас'].map((c) => (
+              {['1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', 'пас'].map((c) => (
                 <span
                   key={c}
                   className="w-10 h-12 rounded-md border border-hairline bg-canvas shadow-soft
