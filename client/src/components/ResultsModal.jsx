@@ -5,11 +5,6 @@ export default function ResultsModal({ session, isModerator, onEnd, onExit, onRe
   const { tasks, id, phase, finishedAt } = session
   const isFinished = phase === 'finished'
 
-  const totalNum = tasks
-    .map((t) => Number(t.finalScore))
-    .filter((n) => !isNaN(n))
-    .reduce((a, b) => a + b, 0)
-
   function download(filename, content, type) {
     const blob = new Blob([content], { type })
     const url = URL.createObjectURL(blob)
@@ -91,12 +86,6 @@ export default function ResultsModal({ session, isModerator, onEnd, onExit, onRe
                 )}
               </tr>
             ))}
-            <tr className="bg-surface-soft">
-              <td className="px-3 py-2.5" />
-              <td className="px-3 py-2.5 text-muted font-medium">Сумма числовых оценок</td>
-              <td className="px-3 py-2.5 text-right font-bold text-ink tabular-nums">{totalNum}</td>
-              {!isFinished && isModerator && <td />}
-            </tr>
           </tbody>
         </table>
       </div>
