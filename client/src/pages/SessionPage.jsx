@@ -382,7 +382,17 @@ export default function SessionPage() {
           </div>
         </main>
 
-        <NotesPanel code={sessionId} />
+        <NotesPanel
+          code={sessionId}
+          board={session.board}
+          boardWriters={session.boardWriters}
+          participants={session.participants}
+          moderatorId={session.moderatorId}
+          myName={myParticipant?.name}
+          isModerator={isModerator}
+          onBoard={(text) => socket.emit('board_update', { sessionId, text })}
+          onGrant={(name, allow) => socket.emit('board_grant', { sessionId, name, allow })}
+        />
       </div>
 
       {detailIndex != null && session.tasks[detailIndex] && (

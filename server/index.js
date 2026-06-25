@@ -41,6 +41,8 @@ function loadSessions() {
       s.roundEndsAt = null;
       s.roundStartedAt = null;
       s.roundVotes = {};
+      if (typeof s.board !== 'string') s.board = '';
+      if (!Array.isArray(s.boardWriters)) s.boardWriters = [];
       if (!Array.isArray(s.seenNames)) s.seenNames = [];
       if (s.phase === 'voting' || s.phase === 'revealed') s.phase = 'waiting';
       out[s.id] = s;
@@ -211,6 +213,8 @@ function publicView(session) {
     roundEndsAt: session.roundEndsAt,
     createdAt: session.createdAt,
     finishedAt: session.finishedAt,
+    board: session.board,
+    boardWriters: session.boardWriters,
     serverNow: Date.now(),
   };
 }
@@ -292,6 +296,8 @@ io.on('connection', (socket) => {
       phase: 'waiting',
       participants: { [socket.id]: { name } },
       roundVotes: {},
+      board: '',
+      boardWriters: [],
       seenNames: [name],
       round: 1,
       roundDuration: null,
@@ -340,6 +346,31 @@ io.on('connection', (socket) => {
   socket.on('sync', ({ sessionId }) => {
     const s = sessions[sessionId];
     if (s) socket.emit('session_updated', publicView(s));
+  });
+
+  socket.on('board_update', ({ sessionId, text }) => {
+    const s = sessions[sessionId];
+    if (!s) return;
+    const p = s.participants[socket.id];
+    if (!p) return;
+    const canWrite = socket.id === s.moderatorId || s.boardWriters.includes(nk(p.name));
+    if (!canWrite) return;
+    s.board = String(text ?? '').slice(0, 5000);
+    broadcast(sessionId);
+    saveSessions();
+  });
+
+  socket.on('board_grant', ({ sessionId, name, allow }) => {
+    const s = sessions[sessionId];
+    if (!s || socket.id !== s.moderatorId) return;
+    const key = nk(String(name || ''));
+    if (!key) return;
+    const set = new Set(s.boardWriters);
+    if (allow) set.add(key);
+    else set.delete(key);
+    s.boardWriters = [...set];
+    broadcast(sessionId);
+    saveSessions();
   });
 
   socket.on('start_voting', ({ sessionId, duration }) => {
